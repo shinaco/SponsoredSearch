@@ -1,0 +1,61 @@
+1. Download the virtual machine :
+   Username: research
+   password: heinz
+
+All Products:
+   a. The program can run for all products at once but the VPN restart issue exists
+
+For each Product
+   a. Go to ~/ResearchProject/GoogleSearch/scripts/
+   b. Run command - `./connect.sh` - look for "Initialization Sequence Completed"
+   c. Now, Run the product search - `./doSearch.sh "UN32EH4003 Samsung"`
+   d. output file will be generated at ~/ResearchProject/GoogleSearch/data/SearchResults.xlsx"
+
+
+-----------------------------------------------------------------------------------
+Add a product list to database
+-----------------------------------------------------------------------------------
+cd to ~/ResearchProject/GoogleSearch/data/
+1. Make a file <filename>.csv
+2. List the products in the form - (you can also use a CSV file made in excel)
+   1,Productname1
+   2,ProductName2
+3. Save the file
+4. write sqlite3 on command line and enter the following commands -
+sqlite> .open googlesearch.db
+sqlite> delete from products;
+sqlite> .mode csv products
+sqlite> .import testProducts.csv products
+-----------------------------------------------------------------------------------
+OPENVPN - add to sudoers
+-----------------------------------------------------------------------------------
+1. sudo <editor> /etc/sudoers
+2. add the following lines at the end
+   username ALL=(ALL) NOPASSWD: /usr/sbin/openvpn
+   username ALL=(ALL) NOPASSWD: /bin/kill
+3. exit the document
+4. reopen to see if the line was added
+ 
+-----------------------------------------------------------------------------------
+Database Setup instructions -  Run the following commands IN ORDER
+-----------------------------------------------------------------------------------
+1. source /home/research/ResearchProject/ResearchProject/bin/activate
+2. python /home/research/ResearchProject/GoogleSearch/src/DataSource.py
+3. source deactivate
+
+-----------------------------------------------------------------------------------
+If you any error for missing library:
+-----------------------------------------------------------------------------------
+Run the following commands IN-ORDER:
+a. source /home/research/ResearchProject/ResearchProject/bin/activate
+b. pip install <package-name> ( e.g. conda install pandas )
+c. source deactivate
+
+-----------------------------------------------------------------------------------
+GITHUB Commands
+-----------------------------------------------------------------------------------
+-- If you want the updated version of code : RUN git pull
+-- DO NOT RUN any other git commands
+-- Please create a GIT UserID/Pwd if you don't already have one
+-- For any issues contact rohans1@andrew.cmu.edu
+-----------------------------------------------------------------------------------

@@ -1,0 +1,38 @@
+﻿Important Notes to Read Before You Download / Installation Notes
+
+
+-Microsoft .NET Framework 3.5 service pack 1(.NET3.5 SP1) is needed to support the software. .NET3.5 SP1 is included in Windows 7 and needed to install into Windows XP. 
+-The software would inspect your computer for .NET3.5 SP1 and download it from Microsoft website automatically.
+- If you have any questions, feel free to contact us anytime via email support@octoparse.com  or live chat with the Octoparse team on the website http://www.octoparse.com/contact.
+
+
+
+Installation Steps
+1. Decompress all the files.
+2. Double-click the setup.exe file to begin the installation process.
+3. The shortcut icon would be created on your desktop and start menu after installation.
+4. Launch the Octoparse and log in with your Octoparse Account before you use it.
+5. Create an account at http://www.octoparse.com (in the higher-right corner of the screen) or log into your Octoparse Account. If you’re already registered,then just sign in.
+6. The guidance appears the first time you use Octoparse and please read the guidance carefully.
+7. In the Octoparse interface, Click the Start button once and click the Learn button to complete the training sessions before you create your own task, then practice Octoparse by watching more videos on our website.
+8. Beginners are strongly recommended to learn Octoparse by watching our tutorial: http://www.octoparse.com/Tutorial
+
+
+Online training resources:
+
+Free training videos:
+http://www.octoparse.com/tutorial
+
+FAQs:
+http://www.octoparse.com/faq
+
+User guide:
+http://www.octoparse.com/doc-wf
+
+Our forum:
+http://bbs.octoparse.com/
+
+Help center:
+http://www.octoparse.com/Help
+
+Thanks for reading and have a great day!

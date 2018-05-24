@@ -1,0 +1,8 @@
+import sys
+#sys.path.append('C:\Users\Abhishek\Miniconda3\Lib\site-packages\google')
+import __init__ as g
+
+num_page = 3
+search_results = g.search("This is my query", num = num_page)
+for result in search_results:
+    print(result.description)
