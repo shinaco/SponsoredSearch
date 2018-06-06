@@ -151,6 +151,7 @@ class organic:
             self.processPDF = True
         except Exception as e:
             logger.exception("message")
+            logger.debug(str(e))
             self.filename = "NA"
             self.processPDF = False
 
@@ -164,6 +165,7 @@ class organic:
             self.processHTML = True
         except Exception as e:
             logger.exception("message")
+            logger.debug(str(e))
             self.htmlfn = "NA"
             self.processHTML = False
 
@@ -275,7 +277,7 @@ class SearchResult:
             self.processedSponsoredTop = False
     def parse_right_ads_table(self):
         root_class_name = "twpSFc mnr-c"
-        price_ex = re.compile(r"(\$\d+[\.\d]+)\b")
+        price_ex = re.compile(r"(\$\d+(?:,\d{3})*[\.\d]+)\b")
         logger.info("Parsing right side tables")
         try:
             self.right_ads_table_data = self.soup.find_all('div', {"class": root_class_name})
@@ -434,6 +436,7 @@ class SearchResult:
                     logger.debug("Found Organic result item : %d", count)
                     count = count + 1
                     oresult.price = self.get_price_from_organic(item)
+                    logger.debug("price" + str(oresult.price))
                     oresult.convert_url_to_pdf()
                     logger.debug(oresult.to_string())
                     self.ads.append(oresult)
@@ -448,13 +451,15 @@ class SearchResult:
       try:
         db = SearchDB("searchresults")
         for ad in self.ads:
+            logger.debug(str(ad))    
             l = self.get_spreadsheet_row(ad)
-            print(l)
+            logger.debug(str(l))
             db.add_row(self.get_spreadsheet_row(ad))
 
       except Exception as e:
         logger.debug("Unable to write data to the database.")
         print(e)
+        logger.debug(str(e))
 
     def get_vendor_from_organic(self, text):
         vendor_ex = re.compile(r"http[s]?\W+w{0,3}[\.]?(.*?)\.")
