@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import pandas as pd
 import errno
 import glob
 import json
@@ -178,8 +179,10 @@ class advertiz(organic):
         self.pagenum      = pagenum
 
 class SearchResult:
-    def __init__(self, keyword, screenshot = True):
+    def __init__(self, keyword, id1, screenshot = True):
         self.keyword    = urllib.parse.quote_plus(keyword)
+        self.name = keyword
+        self.id = id1
         self.screenshot = screenshot
         self.user       = self.process_request()
         self.ads        = []
@@ -486,7 +489,7 @@ class SearchResult:
     def get_spreadsheet_row(self, ad):
       row = [self.city, self.state, datetime.datetime.now(), self.keyword, \
              self.address, ad.product_url, ad.vendor, "NA", "NA", ad.location, \
-             "NA", ad.pagenum, ad.type, "NA", ad.price, "file://"+ad.filename]
+             "NA", ad.pagenum, ad.type, "NA", ad.price, "file://"+ad.filename, self.name, self.id]
       return row
 
     def save_html(self, data, prefix = "p"):
@@ -512,17 +515,18 @@ def main():
     args = parser.parse_args()
 
     report = []
-    products = []
+    
+    
     if(args.product_name is not None and args.product_name.strip() != ""):
         logger.info("Got Product Via command line")
         logger.info("Searching for product : {0}".format(args.product_name))
-        products.append(args.product_name)
+        products = pd.DataFrame([[args.product_name, 0]],columns=['ProductName','ProductID'])
     else:
         logger.info("Running for all products in the database")
         products = get_product_list()
-        logger.info("Got {} products to process".format(len(products)))
+        logger.info("Got {} products to process".format(products.shape[0]))
 
-    for i,product in enumerate(products):
+    for i, product in products.iterrows():
         proc = None
         attempts = 0
         success = 0
@@ -531,20 +535,20 @@ def main():
             logger.debug("Attempt {}".format(attempts))
             try:
                 proc = create_vpn()
-                logger.info("Processing Product {0} of {1}".format(i + 1, len(products)))
-                ad_result = SearchResult(product)
+                logger.info("Processing Product {0} of {1}".format(i + 1, products.shape[0]))
+                ad_result = SearchResult(product['ProductName'],product['ProductID'])
                 process_product(ad_result, args.pages)
                 logger.debug(ad_result.to_string())
                 success = 1
                 sleep(5)
             except Exception as e:
-                logger.info("Parsing/VPN Issue for {0} in Attempt {1}".format(product, attempts))
+                logger.info("Parsing/VPN Issue for {0} in Attempt {1}".format(product['ProductName'], attempts))
                 logger.debug(str(e))
             finally:
                 kill_vpn(proc)
                 if(attempts == MAX_VPN_ATTEMPTS):
-                    logger.info("Parsing for {} failed, please rerun".format(product))
-                    report.append("Parsing/VPN Issue, please rerun for Product : {}".format(product))
+                    logger.info("Parsing for {} failed, please rerun".format(product['ProductName']))
+                    report.append("Parsing/VPN Issue, please rerun for Product : {}".format(product['ProductName']))
                 sleep(10)
 
     save_results_to_spreadsheet()
@@ -569,7 +573,7 @@ def process_product(searchresult, pages):
 def get_product_list():
     productdb = SearchDB("products")
     products  = productdb.get_all()
-    return [item for item in products['ProductName']]
+    return products
 
 @timeout(10, "TimedOut while creating VPN")
 def create_vpn():
