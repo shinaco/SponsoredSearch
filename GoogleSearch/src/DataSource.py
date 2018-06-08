@@ -52,7 +52,7 @@ class SearchDB:
         :return: None
         '''
         if self.tablename == "searchresults":
-            self.conn.execute('''INSERT INTO searchresults VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            self.conn.execute('''INSERT INTO searchresults VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                                                                   (row[0],
                                                                    row[1],
                                                                    row[2],
@@ -68,7 +68,9 @@ class SearchDB:
                                                                    row[12],
                                                                    row[13],
                                                                    row[14],
-                                                                   row[15]
+                                                                   row[15],
+                                                                   row[16],
+                                                                   row[17]
                                                                ))
         elif self.tablename == "products":
             self.conn.execute('''INSERT INTO products VALUES (?,?)''', (row[0], row[1]))
