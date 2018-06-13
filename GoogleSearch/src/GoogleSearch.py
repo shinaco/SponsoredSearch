@@ -23,7 +23,7 @@ from   DataSource import SearchDB
 
 
 #********************* Global Vars *************************
-MAX_VPN_ATTEMPTS = 5
+MAX_VPN_ATTEMPTS = 20
 #***********************************************************
 
 scriptdir = os.path.dirname(os.path.realpath(__file__))
@@ -93,8 +93,10 @@ user_agent_list = [
         "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",\
         "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.0 Safari/536.3",\
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",\
-        "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24"
+        "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24"
        ]
+
+random.seed()
 
 def timeout(seconds,error_message=os.strerror(errno.ETIME)):
     def decorator(func):
@@ -142,8 +144,11 @@ class organic:
         try:
             if "http" not in self.product_url:
                 www = re.compile("(w{3,})")
+                slash = re.compile("^/")
                 if(www.match(self.product_url)):
                     self.product_url = "http://" + self.product_url
+                elif(slash.match(self.product_url)):
+                    self.product_url = "https://www.google.com" + self.product_url
                 else:
                     logger.debug("Can't find http in URL : please check.\nURL %s\n", self.product_url)
                     self.filename = "NA"
@@ -158,7 +163,12 @@ class organic:
 
         # Save html as well.
         try:
-            request = urllib.request.Request(self.product_url, None, {'User-Agent': random.choice(user_agent_list)})
+            #uag = UserAgent(cache=False)
+            #ua = uag.random
+            #logger.debug("Agent:" + ua)
+            ua = random.choice(user_agent_list)
+            print("Agent:" + ua)
+            request = urllib.request.Request(self.product_url, None, {'User-Agent': ua})
             urlfile = urllib.request.urlopen(request, timeout=10)
             htmlcon = urlfile.read()
             with open(self.htmlfn, "w") as text_file:
@@ -199,7 +209,10 @@ class SearchResult:
         self.pagenum = pagenum
 
     def process_request(self):
+        #uag = UserAgent(cache=False)
         ua = random.choice(user_agent_list)
+        print("Agent: " + ua)
+        logger.debug("Agent: " + ua)
         return ua
 
     def get_google_search_result(self):
@@ -208,7 +221,6 @@ class SearchResult:
         self.save_html(self.page, prefix="GoogleSearch")
         self.soup    = BeautifulSoup(self.page, 'html.parser')
         self.get_location()
-
     def get_location(self):
         try:
           url          = 'http://freegeoip.net/json'
@@ -361,8 +373,13 @@ class SearchResult:
         for item in self.top_ads_list:
             try:
                 ad_data        = item.find('a', {"class" : "plantl pla-unit-title-link"})
+                logger.debug("ad data: " + str(ad_data))
                 # create ad object
-                ad             = advertiz(ad_data.span.text, self.pagenum)
+                try:
+                     ad             = advertiz(ad_data.span.text, self.pagenum)
+                except Exception as e:
+                     logger.debug("test2X:")
+                     ad             = advertiz(ad_data.text, self.pagenum)
                 ad.location    = "top"
                 ad.product_url = ad_data['href']
                 ad.price       = item(text=re.compile(r"(\$\d+[\.\d]+)\b"))[0]
@@ -534,22 +551,29 @@ def main():
             attempts += 1
             logger.debug("Attempt {}".format(attempts))
             try:
+                exc = 0
                 proc = create_vpn()
                 logger.info("Processing Product {0} of {1}".format(i + 1, products.shape[0]))
                 ad_result = SearchResult(product['ProductName'],product['ProductID'])
                 process_product(ad_result, args.pages)
                 logger.debug(ad_result.to_string())
                 success = 1
-                sleep(5)
+                sleep(randint(5,15))
+            except urllib.error.HTTPError as e:
+                exc = 1
+                logger.info("Parsing/VPN Issue for {0} in Attempt {1}".format(product['ProductName'], attempts))
+                logger.debug(str(e))
+                logger.debug(e.read())
             except Exception as e:
+                exc = 1
                 logger.info("Parsing/VPN Issue for {0} in Attempt {1}".format(product['ProductName'], attempts))
                 logger.debug(str(e))
             finally:
                 kill_vpn(proc)
-                if(attempts == MAX_VPN_ATTEMPTS):
+                if(attempts == MAX_VPN_ATTEMPTS and exc == 1):
                     logger.info("Parsing for {} failed, please rerun".format(product['ProductName']))
                     report.append("Parsing/VPN Issue, please rerun for Product : {}".format(product['ProductName']))
-                sleep(10)
+                sleep(randint(5,15))
 
     save_results_to_spreadsheet()
     print("***************************** REPORT ************************************")
@@ -605,6 +629,7 @@ def create_vpn():
     return proc
 
 def kill_vpn(proc):
+    #call(['sudo','killall', 'openvpn'])
     logger.debug(proc)
     if proc is not None:
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
