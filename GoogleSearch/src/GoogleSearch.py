@@ -558,7 +558,7 @@ def main():
                 process_product(ad_result, args.pages)
                 logger.debug(ad_result.to_string())
                 success = 1
-                sleep(randint(5,15))
+                sleep(random.randint(5,15))
             except urllib.error.HTTPError as e:
                 exc = 1
                 logger.info("Parsing/VPN Issue for {0} in Attempt {1}".format(product['ProductName'], attempts))
@@ -573,7 +573,7 @@ def main():
                 if(attempts == MAX_VPN_ATTEMPTS and exc == 1):
                     logger.info("Parsing for {} failed, please rerun".format(product['ProductName']))
                     report.append("Parsing/VPN Issue, please rerun for Product : {}".format(product['ProductName']))
-                sleep(randint(5,15))
+                sleep(random.randint(5,15))
 
     save_results_to_spreadsheet()
     print("***************************** REPORT ************************************")
