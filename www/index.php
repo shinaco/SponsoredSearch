@@ -13,7 +13,7 @@
 <?php
 	$db = new SQLite3('/home/research/ResearchProject/GoogleSearch/data/googlesearch.db');
 	if (isset($_POST["vals"])){
-		$vals = unserialize($_POST["vals"]);
+		$vals = unserialize(str_replace("&#39;","'",$_POST["vals"]));
 		$query = $db->prepare('insert into searchresultsfinal values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 		for($i=0;$i<count($vals)/2;$i++){
 			$query->bindValue($i+1, $vals[$i]);
@@ -186,7 +186,7 @@ Other Cost <input type="number" step=0.01 name="othercost"><br>
 Third party vendor<input type="text" name="thirdparty">
 			<input type="submit" value="Send">
             <a href="review.php">Review/Edit previous data</a>
-			<input type="hidden" name="vals" value='<?php echo serialize($row) ?>'>
+			<input type="hidden" name="vals" value='<?php echo str_replace("'","&#39;",serialize($row)) ?>'>
 			</td>
 	</tr>
 </table>
