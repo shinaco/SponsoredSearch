@@ -14,7 +14,7 @@
 	$db = new SQLite3('/home/research/ResearchProject/GoogleSearch/data/googlesearch.db');
 	if (isset($_POST["vals"])){
 		$vals = unserialize($_POST["vals"]);
-		$query = $db->prepare('insert into searchresultsfinal values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+		$query = $db->prepare('insert into searchresultsfinal values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 		for($i=0;$i<count($vals)/2;$i++){
 			$query->bindValue($i+1, $vals[$i]);
 		}
@@ -114,7 +114,19 @@
 		else {
 			$query->bindValue(33, null, SQLITE3_NULL);
 		}
-		$result=$query->execute();
+		if(!empty($_POST["unrelated"])){
+			$query->bindValue(34, 1);
+		}
+		else {
+			$query->bindValue(34,0);
+		}
+        if(!empty($_POST["comment"])){
+			$query->bindValue(35, $_POST["comment"]);
+		}
+		else {
+			$query->bindValue(35, null, SQLITE3_NULL);
+		}
+		$result=$query->execute()->finalize();
 	}
 	$results = $db->query('SELECT * FROM searchresults as sr where not exists
 	(select 1 from searchresultsfinal as srf where sr.City = srf.City and
@@ -135,10 +147,12 @@
                                                 sr.StaticFilePath = srf.StaticFilePath and 
 sr.productName = srf.productName and
 sr.productID = srf.productID)');
-	$row = $results->fetchArray();
-	$imgquery = $db->query("select * from products where productName = '{$row['productName']}' and productID = '{$row['productID']}'");
-	if($imgrow = $imgquery -> fetchArray())
+	
+	
+	if($row = $results->fetchArray())
 	{
+        $imgquery = $db->query("select * from products where productName = '{$row['productName']}' and productID = '{$row['productID']}'");
+        $imgrow = $imgquery -> fetchArray();
 ?>
 <form method="post" action="index.php">
 <table border=1>
@@ -150,22 +164,28 @@ sr.productID = srf.productID)');
 	</tr>
 	<tr>
 		<td colspan = 2>
-			<table><tr><td><input type="checkbox" name="sameproduct" value="1">same model</td>
-				<td><input type="checkbox" name="sametype" value="1">same type</td>
+			<table><tr><td><input type="checkbox" name="sameproduct" value="1">same exact model</td>
+				<td><input type="checkbox" name="sametype" value="1">same type (even if not same model)</td>
 				<td><input type="checkbox" name="complement" value="1">complement</td>
 				<td><input type="checkbox" name="differentbrand" value="1">different brand</td>
-				<td><input type="checkbox" name="listingproduct" value="1">listing of products</td></tr>
-				<tr><td><input type="checkbox" name="listingvendors" value="1">listing of vendors</td>
-				<td><input type="checkbox" name="notseller" value="1">not a seller</td>
+                <td><input type="checkbox" name="notseller" value="1">not a seller</td>
+                <td><input type="checkbox" name="unrelated" value="1">unrelated</td>
+                </tr>
+				<tr><td><input type="checkbox" name="listingproduct" value="1">listing of products</td>
+				<td><input type="checkbox" name="listingvendors" value="1">listing of vendors</td>
 				<td><input type="checkbox" name="unavailable" value="1">out of stock/unavailable</td>
 				<td><input type="checkbox" name="suspicious" value="1">suspicious</td>
-					<td><input type="checkbox" name="nonusdollar" value="1">Non US dollar</td></tr></table>
+					<td><input type="checkbox" name="nonusdollar" value="1">Non US dollar</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr><td colspan=6>Comment: <input type="text" name="comment"></td></tr></table>
 Price <input type="number" step=0.01 name="price">
 Shipping <input type="number" step=0.01 name="shipping">
 To free shipping <input type="number" step=0.01 name="tofreeshipping">
 Other Cost <input type="number" step=0.01 name="othercost"><br>
-Third party <input type="text" name="thirdparty">
+Third party vendor<input type="text" name="thirdparty">
 			<input type="submit" value="Send">
+            <a href="review.php">Review/Edit previous data</a>
 			<input type="hidden" name="vals" value='<?php echo serialize($row) ?>'>
 			</td>
 	</tr>
