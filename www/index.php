@@ -13,7 +13,14 @@
 <?php
     
 	$db = new SQLite3('/home/research/ResearchProject/GoogleSearch/data/googlesearch.db');
-	if (isset($_POST["vals"])){
+    if (isset($_POST["exclude"])){
+        $fileX=fopen("exclude.csv","a");
+        $vals = unserialize(str_replace("&#39;","'",$_POST["vals"]));
+        fwrite($fileX, $vals['productName'] . "\n");
+        fclose($fileX);
+        
+    }
+	if (isset($_POST["vals"]) && isset($_POST["send"])){
 		$vals = unserialize(str_replace("&#39;","'",$_POST["vals"]));
 		$query = $db->prepare('insert into searchresultsfinal values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 		for($i=0;$i<count($vals)/2;$i++){
@@ -129,7 +136,7 @@
 		}
 		$result=$query->execute()->finalize();
 	}
-	$results = $db->query('SELECT * FROM searchresults as sr where not exists
+    $query = 'SELECT * FROM searchresults as sr where not exists
 	(select 1 from searchresultsfinal as srf where sr.City = srf.City and
                                                 sr.State = srf.State and
                                                 sr.Datetime = srf.Datetime and
@@ -147,7 +154,28 @@
                                                 sr.AdValue = srf.AdValue and
                                                 sr.StaticFilePath = srf.StaticFilePath and 
 sr.productName = srf.productName and
-sr.productID = srf.productID)');
+sr.productID = srf.productID)';
+    if($fileX=fopen("exclude.csv","r"))
+    {
+        $query = $query . " and sr.productName not in ( ";
+        $first = true;
+        while(!feof($fileX))
+        {
+            $line = fgets($fileX);
+            if (!$first && !empty(trim($line))){
+                $query = $query . ", ";
+            }
+            else {
+                $first = false;
+            }
+            if(!empty(trim($line)))
+                $query = $query . "'" . str_replace("'","''",trim($line)) . "'";
+            flush();
+        }
+        $query = $query . ")";
+        fclose($fileX);
+    }
+	$results = $db->query($query);
 	
 	if($row = $results->fetchArray())
 	{
@@ -173,7 +201,8 @@ sr.productID = srf.productID)');
 <form method="post" action="index.php">
 <table border=1>
 	<tr>
-		<td colspan="2">Search Term: <?php echo $row['productName']; ?><br>City: <?php echo $row['City']; ?>, State: <?php echo $row['State']; ?>, Position: <?php echo $row['Position']; ?>, Page Number: <?php echo $row['PageNumber']; ?></td>
+		<td colspan="2">Search Term: <?php echo $row['productName']; ?> | <a href="images/GoogleSearch_<?php echo str_replace("%","%25",$row['SearchTerm']);?>_1.html">Page 1</a> | <a href="images/GoogleSearch_<?php echo str_replace("%","%25",$row['SearchTerm']);?>_2.html">Page 2</a>
+            <br>City: <?php echo $row['City']; ?>, State: <?php echo $row['State']; ?>, Position: <?php echo $row['Position']; ?>, Page Number: <?php echo $row['PageNumber']; ?></td>
 	</tr>
 	<tr>
 		<td width="25%"><img class="zoom" width="100%" src="<?php echo $img; ?>"></td><td><a href=<?php echo $row["AdURLWebsite"] ?> target="_blank"><img class="zoom" width=100% src="<?php echo str_replace("file:///home/research/ResearchProject/GoogleSearch/data/","/images/",$row['StaticFilePath']); ?>" alt="test"></a></td>
@@ -200,7 +229,8 @@ Shipping <input type="number" step=0.01 name="shipping"<?php if ($prevres) { ech
 To free shipping <input type="number" step=0.01 name="tofreeshipping"<?php if ($prevres) { echo ' value="'. $prevrow['tofreeshipping'] . '"'; } ?>>
 Other Cost <input type="number" step=0.01 name="othercost"<?php if ($prevres) { echo ' value="'. $prevrow['othercost'] . '"'; } ?>><br>
 Third party vendor<input type="text" name="thirdparty"<?php if ($prevres) { echo ' value="' . $prevrow['thirdparty'] . '"'; } ?>>
-			<input type="submit" value="Send">
+			<input type="submit" name="send" value="Send">
+            <input type="submit" name="exclude" value="Exclude">
             <a href="review.php">Review/Edit previous data</a>
 			<input type="hidden" name="vals" value='<?php echo str_replace("'","&#39;",serialize($row)) ?>'>
 			</td>
