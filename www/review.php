@@ -13,7 +13,7 @@
 <?php
 	$db = new SQLite3('/home/research/ResearchProject/GoogleSearch/data/googlesearch.db');
 	if (isset($_POST["Save"])){
-		$prevrow = unserialize($_POST["vals"]);
+		$prevrow = unserialize(str_replace("&#39;","'",$_POST["vals"]));
 		$query = $db->prepare('update searchresultsfinal set sameproduct = ?, sametype = ?, complement = ?, differentbrand = ?, notseller = ?, listingproduct = ?, listingvendors = ?, unavailable = ?, suspicious = ?, nonusdollar = ?, price = ?, shipping = ?, tofreeshipping = ?, othercost = ?, thirdparty = ?, unrelated = ?, comment = ? where City = ? and State = ? and Datetime = ? and SearchTerm = ? and GoogleURL = ? and AdURLWebsite = ? and WebsiteName = ? and Vendor = ? and PositionNum = ? and Position = ? and ResultConsistent = ? and PageNumber = ? and TypeofResult = ? and Comments = ? and AdValue = ? and StaticFilePath = ? and productName = ? and productID = ?');
 		if(isset($_POST["sameproduct"])){
 			$query->bindValue(1, 1);
@@ -229,7 +229,7 @@ Third party vendor<input type="text" name="thirdparty" value="<?php echo $row['t
             <input type="submit" name="Last" value="Last"<?php if($disablenext) { ?> disabled<?php } ?>>
             <a href="index.php">Capture new data</a>
 			<input type="hidden" name="curr" value='<?php echo $curr ?>'>
-			<input type="hidden" name="vals" value='<?php echo $vals ?>'>
+			<input type="hidden" name="vals" value='<?php echo str_replace("'","&#39;",$vals) ?>'>
 			</td>
 	</tr>
 </table>
