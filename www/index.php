@@ -194,7 +194,7 @@ sr.productID = srf.productID)');
 					<td><input type="checkbox" name="nonusdollar" value="1"<?php if ($prevres && $prevrow['nonusdollar'] == 1) { ?> checked="checked"<?php } ?>>Non US dollar</td>
                     <td>&nbsp;</td>
                 </tr>
-                <tr><td colspan=6>Comment: <input type="text" name="comment"<?php if ($prevres) { echo ' value="'. $prevrow['text'] . '"'; } ?>></td></tr></table>
+                <tr><td colspan=6>Comment: <input type="text" name="comment"<?php if ($prevres) { echo ' value="'. $prevrow['comment'] . '"'; } ?>></td></tr></table>
 Price <input type="number" step=0.01 name="price"<?php if ($prevres) { echo ' value="'. $prevrow['price'] . '"'; } ?>>
 Shipping <input type="number" step=0.01 name="shipping"<?php if ($prevres) { echo ' value="'. $prevrow['shipping'] . '"'; } ?>>
 To free shipping <input type="number" step=0.01 name="tofreeshipping"<?php if ($prevres) { echo ' value="'. $prevrow['tofreeshipping'] . '"'; } ?>>
