@@ -150,43 +150,55 @@ sr.productID = srf.productID)');*/
 		}
 		if (isset($_POST["Next"])){
 			$curr++;
-		}	
+		}
+        if (isset($_POST["First"])){
+            $curr=1;
+        }
 	}
 	else{
 		$curr = 1;
-	}
-	if($curr == 1){
-		$disableprev = true;
 	}
 	$results = $db->query('SELECT * FROM searchresultsfinal');
 	if($row = $results->fetchArray())
 	{
 		$cur = 1;
-		while($cur<$curr){
+		while($cur<$curr || isset($_POST["Last"])){
 			$cur++;
 			if($row2 = $results->fetchArray()){
 				$row = $row2;
 			}
 			else{
 				$disablenext = true;
-				$curr--;
+				$curr=$cur-1;
 				break;
 			}
 		}
+        if($curr == 1){
+		    $disableprev = true;
+	    }
 		if (!$row2 = $results->fetchArray()){
 			$disablenext = true;
 		}
 		$vals = serialize($row);
-		$imgquery = $db->query("select * from products where productName = '{$row['productName']}' and productID = '{$row['productID']}'");
-		$imgrow = $imgquery -> fetchArray();
+        $file = fopen("/home/research/ResearchProject/GoogleSearch/data/products2.csv","r");
+        while(! feof($file))
+        {
+            $arr=fgetcsv($file);
+            if($arr[0]==$row['productID']){
+                $img = $arr[2];
+                break;
+            }
+        }
+        //$imgquery = $db->query("select * from products where productName = '{$row['productName']}' and productID = '{$row['productID']}'");
+        //$imgrow = $imgquery -> fetchArray();
 ?>
 <form method="post" action="review.php">
 <table border=1>
 	<tr>
-		<td colspan="2">Search Term:<br><?php echo $row['productName']; ?>
+		<td colspan="2">Search Term: <?php echo $row['productName']; ?><br>City: <?php echo $row['City']; ?>, State: <?php echo $row['State']; ?>, Position: <?php echo $row['Position']; ?>, Page Number: <?php echo $row['PageNumber']; ?></td>
 	</tr>
 	<tr>
-		<td width="25%"><img class="zoom" width="100%" src="<?php echo $imgrow['imageurl']; ?>"></td><td><a href=<?php echo $row["AdURLWebsite"] ?> target="_blank"><img class="zoom" width=100% src="<?php echo str_replace("file:///home/research/ResearchProject/GoogleSearch/data/","/images/",$row['StaticFilePath']); ?>" alt="test"></a></td>
+		<td width="25%"><img class="zoom" width="100%" src="<?php echo $img; ?>"></td><td><a href=<?php echo $row["AdURLWebsite"] ?> target="_blank"><img class="zoom" width=100% src="<?php echo str_replace("file:///home/research/ResearchProject/GoogleSearch/data/","/images/",$row['StaticFilePath']); ?>" alt="test"></a></td>
 	</tr>
 	<tr>
 		<td colspan = 2>
@@ -210,9 +222,11 @@ Shipping <input type="number" step=0.01 name="shipping" value="<?php echo $row['
 To free shipping <input type="number" step=0.01 name="tofreeshipping" value="<?php echo $row['tofreeshipping']; ?>">
 Other Cost <input type="number" step=0.01 name="othercost" value="<?php echo $row['othercost']; ?>"><br>
 Third party vendor<input type="text" name="thirdparty" value="<?php echo $row['thirdparty']; ?>">
-			<input type="submit" name="Prev" value="Previous"<?php if($disableprev) { ?> disabled<?php } ?>>
+			<input type="submit" name="First" value="First"<?php if($disableprev) { ?> disabled<?php } ?>>
+            <input type="submit" name="Prev" value="Previous"<?php if($disableprev) { ?> disabled<?php } ?>>
 			<input type="submit" name="Save" value="Save">
 			<input type="submit" name="Next" value="Next"<?php if($disablenext) { ?> disabled<?php } ?>>
+            <input type="submit" name="Last" value="Last"<?php if($disablenext) { ?> disabled<?php } ?>>
             <a href="index.php">Capture new data</a>
 			<input type="hidden" name="curr" value='<?php echo $curr ?>'>
 			<input type="hidden" name="vals" value='<?php echo $vals ?>'>
@@ -225,7 +239,7 @@ Third party vendor<input type="text" name="thirdparty" value="<?php echo $row['t
 	 else
 	 {
 	?>
-	You have filled all the required information
+	You have no filled data
 	<?php
 	 }
 	?>

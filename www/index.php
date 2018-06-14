@@ -11,6 +11,7 @@
 }
 </style>
 <?php
+    
 	$db = new SQLite3('/home/research/ResearchProject/GoogleSearch/data/googlesearch.db');
 	if (isset($_POST["vals"])){
 		$vals = unserialize(str_replace("&#39;","'",$_POST["vals"]));
@@ -148,42 +149,57 @@
 sr.productName = srf.productName and
 sr.productID = srf.productID)');
 	
-	
 	if($row = $results->fetchArray())
 	{
-        $imgquery = $db->query("select * from products where productName = '{$row['productName']}' and productID = '{$row['productID']}'");
-        $imgrow = $imgquery -> fetchArray();
+        $prevresults = $db->query('Select * from searchresultsfinal where AdURLWebsite = "' . $row['AdURLWebsite'] . '" order by Datetime desc');
+        if($prevrow = $prevresults->fetchArray()){
+            $prevres = true;
+        }
+        else {
+            $prevres = false;
+        }
+        $file = fopen("/home/research/ResearchProject/GoogleSearch/data/products2.csv","r");
+        while(! feof($file))
+        {
+            $arr=fgetcsv($file);
+            if($arr[0]==$row['productID']){
+                $img = $arr[2];
+                break;
+            }
+        }
+        //$imgquery = $db->query("select * from products where productName = '{$row['productName']}' and productID = '{$row['productID']}'");
+        //$imgrow = $imgquery -> fetchArray();
 ?>
 <form method="post" action="index.php">
 <table border=1>
 	<tr>
-		<td colspan="2">Search Term:<br><?php echo $row['productName']; ?>
+		<td colspan="2">Search Term: <?php echo $row['productName']; ?><br>City: <?php echo $row['City']; ?>, State: <?php echo $row['State']; ?>, Position: <?php echo $row['Position']; ?>, Page Number: <?php echo $row['PageNumber']; ?></td>
 	</tr>
 	<tr>
-		<td width="25%"><img class="zoom" width="100%" src="<?php echo $imgrow['imageurl']; ?>"></td><td><a href=<?php echo $row["AdURLWebsite"] ?> target="_blank"><img class="zoom" width=100% src="<?php echo str_replace("file:///home/research/ResearchProject/GoogleSearch/data/","/images/",$row['StaticFilePath']); ?>" alt="test"></a></td>
+		<td width="25%"><img class="zoom" width="100%" src="<?php echo $img; ?>"></td><td><a href=<?php echo $row["AdURLWebsite"] ?> target="_blank"><img class="zoom" width=100% src="<?php echo str_replace("file:///home/research/ResearchProject/GoogleSearch/data/","/images/",$row['StaticFilePath']); ?>" alt="test"></a></td>
 	</tr>
 	<tr>
 		<td colspan = 2>
-			<table><tr><td><input type="checkbox" name="sameproduct" value="1">same exact model</td>
-				<td><input type="checkbox" name="sametype" value="1">same type (even if not same model)</td>
-				<td><input type="checkbox" name="complement" value="1">complement</td>
-				<td><input type="checkbox" name="differentbrand" value="1">different brand</td>
-                <td><input type="checkbox" name="notseller" value="1">not a seller</td>
-                <td><input type="checkbox" name="unrelated" value="1">unrelated</td>
+			<table><tr><td><input type="checkbox" name="sameproduct" value="1"<?php if ($prevres && $prevrow['sameproduct'] == 1) { ?> checked="checked"<?php } ?>>same exact model</td>
+				<td><input type="checkbox" name="sametype" value="1"<?php if ($prevres && $prevrow['sametype'] == 1) { ?> checked="checked"<?php } ?>>same type (even if not same model)</td>
+				<td><input type="checkbox" name="complement" value="1"<?php if ($prevres && $prevrow['complement'] == 1) { ?> checked="checked"<?php } ?>>complement</td>
+				<td><input type="checkbox" name="differentbrand" value="1"<?php if ($prevres && $prevrow['differentbrand'] == 1) { ?> checked="checked"<?php } ?>>different brand</td>
+                <td><input type="checkbox" name="notseller" value="1"<?php if ($prevres && $prevrow['notseller'] == 1) { ?> checked="checked"<?php } ?>>not a seller</td>
+                <td><input type="checkbox" name="unrelated" value="1"<?php if ($prevres && $prevrow['unrelated'] == 1) { ?> checked="checked"<?php } ?>>unrelated</td>
                 </tr>
-				<tr><td><input type="checkbox" name="listingproduct" value="1">listing of products</td>
-				<td><input type="checkbox" name="listingvendors" value="1">listing of vendors</td>
-				<td><input type="checkbox" name="unavailable" value="1">out of stock/unavailable</td>
-				<td><input type="checkbox" name="suspicious" value="1">suspicious</td>
-					<td><input type="checkbox" name="nonusdollar" value="1">Non US dollar</td>
+				<tr><td><input type="checkbox" name="listingproduct" value="1"<?php if ($prevres && $prevrow['listingproduct'] == 1) { ?> checked="checked"<?php } ?>>listing of products</td>
+				<td><input type="checkbox" name="listingvendors" value="1"<?php if ($prevres && $prevrow['listingvendors'] == 1) { ?> checked="checked"<?php } ?>>listing of vendors</td>
+				<td><input type="checkbox" name="unavailable" value="1"<?php if ($prevres && $prevrow['unavailable'] == 1) { ?> checked="checked"<?php } ?>>out of stock/unavailable</td>
+				<td><input type="checkbox" name="suspicious" value="1"<?php if ($prevres && $prevrow['suspicious'] == 1) { ?> checked="checked"<?php } ?>>suspicious</td>
+					<td><input type="checkbox" name="nonusdollar" value="1"<?php if ($prevres && $prevrow['nonusdollar'] == 1) { ?> checked="checked"<?php } ?>>Non US dollar</td>
                     <td>&nbsp;</td>
                 </tr>
-                <tr><td colspan=6>Comment: <input type="text" name="comment"></td></tr></table>
-Price <input type="number" step=0.01 name="price">
-Shipping <input type="number" step=0.01 name="shipping">
-To free shipping <input type="number" step=0.01 name="tofreeshipping">
-Other Cost <input type="number" step=0.01 name="othercost"><br>
-Third party vendor<input type="text" name="thirdparty">
+                <tr><td colspan=6>Comment: <input type="text" name="comment"<?php if ($prevres) { echo ' value="'. $prevrow['text'] . '"'; } ?>></td></tr></table>
+Price <input type="number" step=0.01 name="price"<?php if ($prevres) { echo ' value="'. $prevrow['price'] . '"'; } ?>>
+Shipping <input type="number" step=0.01 name="shipping"<?php if ($prevres) { echo ' value="'. $prevrow['shipping'] . '"'; } ?>>
+To free shipping <input type="number" step=0.01 name="tofreeshipping"<?php if ($prevres) { echo ' value="'. $prevrow['tofreeshipping'] . '"'; } ?>>
+Other Cost <input type="number" step=0.01 name="othercost"<?php if ($prevres) { echo ' value="'. $prevrow['othercost'] . '"'; } ?>><br>
+Third party vendor<input type="text" name="thirdparty"<?php if ($prevres) { echo ' value="' . $prevrow['thirdparty'] . '"'; } ?>>
 			<input type="submit" value="Send">
             <a href="review.php">Review/Edit previous data</a>
 			<input type="hidden" name="vals" value='<?php echo str_replace("'","&#39;",serialize($row)) ?>'>
