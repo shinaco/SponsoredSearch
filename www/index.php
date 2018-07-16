@@ -22,7 +22,7 @@
     }
 	if (isset($_POST["vals"]) && isset($_POST["send"])){
 		$vals = unserialize(str_replace("&#39;","'",$_POST["vals"]));
-		$query = $db->prepare('insert into searchresultsfinal values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+		$query = $db->prepare('insert into searchresultsfinal values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 		for($i=0;$i<count($vals)/2;$i++){
 			$query->bindValue($i+1, $vals[$i]);
 		}
@@ -128,11 +128,23 @@
 		else {
 			$query->bindValue(34,0);
 		}
-        if(!empty($_POST["comment"])){
-			$query->bindValue(35, $_POST["comment"]);
+        if(!empty($_POST["refurbished"])){
+			$query->bindValue(35, 1);
 		}
 		else {
-			$query->bindValue(35, null, SQLITE3_NULL);
+			$query->bindValue(35,0);
+		}
+        if(!empty($_POST["used"])){
+			$query->bindValue(36, 1);
+		}
+		else {
+			$query->bindValue(36,0);
+		}
+        if(!empty($_POST["comment"])){
+			$query->bindValue(37, $_POST["comment"]);
+		}
+		else {
+			$query->bindValue(37, null, SQLITE3_NULL);
 		}
 		$result=$query->execute()->finalize();
 	}
@@ -215,13 +227,14 @@ sr.productID = srf.productID)';
 				<td><input type="checkbox" name="differentbrand" value="1"<?php if ($prevres && $prevrow['differentbrand'] == 1) { ?> checked="checked"<?php } ?>>different brand</td>
                 <td><input type="checkbox" name="notseller" value="1"<?php if ($prevres && $prevrow['notseller'] == 1) { ?> checked="checked"<?php } ?>>not a seller</td>
                 <td><input type="checkbox" name="unrelated" value="1"<?php if ($prevres && $prevrow['unrelated'] == 1) { ?> checked="checked"<?php } ?>>unrelated</td>
-                </tr>
+                <td>&nbsp;</td></tr>
 				<tr><td><input type="checkbox" name="listingproduct" value="1"<?php if ($prevres && $prevrow['listingproduct'] == 1) { ?> checked="checked"<?php } ?>>listing of products</td>
 				<td><input type="checkbox" name="listingvendors" value="1"<?php if ($prevres && $prevrow['listingvendors'] == 1) { ?> checked="checked"<?php } ?>>listing of vendors</td>
 				<td><input type="checkbox" name="unavailable" value="1"<?php if ($prevres && $prevrow['unavailable'] == 1) { ?> checked="checked"<?php } ?>>out of stock/unavailable</td>
 				<td><input type="checkbox" name="suspicious" value="1"<?php if ($prevres && $prevrow['suspicious'] == 1) { ?> checked="checked"<?php } ?>>suspicious</td>
 					<td><input type="checkbox" name="nonusdollar" value="1"<?php if ($prevres && $prevrow['nonusdollar'] == 1) { ?> checked="checked"<?php } ?>>Non US dollar</td>
-                    <td>&nbsp;</td>
+                    <td><input type="checkbox" name="refurbished" value="1"<?php if ($prevres && $prevrow['refurbished'] == 1) { ?> checked="refurbished"<?php } ?>>Refurbished</td>
+                    <td><input type="checkbox" name="used" value="1"<?php if ($prevres && $prevrow['used'] == 1) { ?> checked="used"<?php } ?>>Used</td>
                 </tr>
                 <tr><td colspan=6>Comment: <input type="text" name="comment"<?php if ($prevres) { echo ' value="'. $prevrow['comment'] . '"'; } ?>></td></tr></table>
 Price <input type="number" step=0.01 name="price"<?php if ($prevres) { echo ' value="'. $prevrow['price'] . '"'; } ?>>
