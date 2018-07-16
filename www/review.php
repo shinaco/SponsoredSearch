@@ -14,7 +14,7 @@
 	$db = new SQLite3('/home/research/ResearchProject/GoogleSearch/data/googlesearch.db');
 	if (isset($_POST["Save"])){
 		$prevrow = unserialize(str_replace("&#39;","'",$_POST["vals"]));
-		$query = $db->prepare('update searchresultsfinal set sameproduct = ?, sametype = ?, complement = ?, differentbrand = ?, notseller = ?, listingproduct = ?, listingvendors = ?, unavailable = ?, suspicious = ?, nonusdollar = ?, price = ?, shipping = ?, tofreeshipping = ?, othercost = ?, thirdparty = ?, unrelated = ?, comment = ? where City = ? and State = ? and Datetime = ? and SearchTerm = ? and GoogleURL = ? and AdURLWebsite = ? and WebsiteName = ? and Vendor = ? and PositionNum = ? and Position = ? and ResultConsistent = ? and PageNumber = ? and TypeofResult = ? and Comments = ? and AdValue = ? and StaticFilePath = ? and productName = ? and productID = ?');
+		$query = $db->prepare('update searchresultsfinal set sameproduct = ?, sametype = ?, complement = ?, differentbrand = ?, notseller = ?, listingproduct = ?, listingvendors = ?, unavailable = ?, suspicious = ?, nonusdollar = ?, price = ?, shipping = ?, tofreeshipping = ?, othercost = ?, thirdparty = ?, unrelated = ?, comment = ?, used = ?, refurbished = ? where City = ? and State = ? and Datetime = ? and SearchTerm = ? and GoogleURL = ? and AdURLWebsite = ? and WebsiteName = ? and Vendor = ? and PositionNum = ? and Position = ? and ResultConsistent = ? and PageNumber = ? and TypeofResult = ? and Comments = ? and AdValue = ? and StaticFilePath = ? and productName = ? and productID = ?');
 		if(isset($_POST["sameproduct"])){
 			$query->bindValue(1, 1);
 		}
@@ -117,8 +117,20 @@
 		else {
 			$query->bindValue(17, null, SQLITE3_NULL);
 		}
+        if(!empty($_POST["refurbished"])){
+			$query->bindValue(18, 1);
+		}
+		else {
+			$query->bindValue(18,0);
+		}
+        if(!empty($_POST["used"])){
+			$query->bindValue(19, 1);
+		}
+		else {
+			$query->bindValue(19,0);
+		}
 		for($i=0;$i<18;$i++){
-			$query->bindValue($i+18, $prevrow[$i]);
+			$query->bindValue($i+20, $prevrow[$i]);
 		}
 		$result=$query->execute();
 	}
@@ -208,13 +220,15 @@ sr.productID = srf.productID)');*/
 				<td><input type="checkbox" name="differentbrand" value="1" <?php if ($row['differentbrand']==1) {?>checked="checked"<?php } ?>>different brand</td>
                 <td><input type="checkbox" name="notseller" value="1" <?php if ($row['notseller']==1) {?>checked="checked"<?php } ?>>not a seller</td>
                 <td><input type="checkbox" name="unrelated" value="1" <?php if ($row['unrelated']==1) {?>checked="checked"<?php } ?>>unrelated</td>
+                <td>&nbsp;</td>
                 </tr>
 				<tr><td><input type="checkbox" name="listingproduct" value="1" <?php if ($row['listingproduct']==1) {?>checked="checked"<?php } ?>>listing of products</td>
 				<td><input type="checkbox" name="listingvendors" value="1" <?php if ($row['listingvendors']==1) {?>checked="checked"<?php } ?>>listing of vendors</td>
 				<td><input type="checkbox" name="unavailable" value="1" <?php if ($row['unavailable']==1) {?>checked="checked"<?php } ?>>out of stock/unavailable</td>
 				<td><input type="checkbox" name="suspicious" value="1" <?php if ($row['suspicious']==1) {?>checked="checked"<?php } ?>>suspicious</td>
 					<td><input type="checkbox" name="nonusdollar" value="1" <?php if ($row['nonusdollar']==1) {?>checked="checked"<?php } ?>>Non US dollar</td>
-                    <td>&nbsp;</td>
+                    <td><input type="checkbox" name="refurbished" value="1" <?php if ($row['refurbished']==1) {?>checked="checked"<?php } ?>>Refurbished</td>
+                    <td><input type="checkbox" name="used" value="1" <?php if ($row['used']==1) {?>checked="checked"<?php } ?>>Used</td>
                 </tr>
                 <tr><td colspan=6>Comment: <input type="text" name="comment" value="<?php echo $row['comment']; ?>"></td></tr></table>
 Price <input type="number" step=0.01 name="price" value="<?php echo $row['price']; ?>">
