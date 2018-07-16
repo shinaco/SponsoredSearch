@@ -13,6 +13,7 @@ import signal
 import shlex
 import subprocess
 import urllib
+from selenium.webdriver.common.keys import Keys
 from   bs4 import BeautifulSoup
 from   argparse import ArgumentParser
 from   functools import wraps
@@ -20,7 +21,16 @@ from   subprocess import call
 from   time import sleep
 from   web2screenshot import make_screenshot
 from   DataSource import SearchDB
-
+from   selenium import webdriver
+from   selenium.webdriver.chrome.options import Options
+from   fake_useragent import UserAgent
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--window-size=1920,1080")
+browser = webdriver.Chrome(chrome_options=options)
+browser.implicitly_wait(99)
+browser.set_page_load_timeout(99)
 
 #********************* Global Vars *************************
 MAX_VPN_ATTEMPTS = 20
@@ -133,27 +143,47 @@ class organic:
 
 
     def get_random_filename(self):
+        keyw = self.product_name.replace("/","%2F")
         vendor  = re.sub('[^0-9a-zA-Z]+', '_', self.vendor)
-        product = re.sub('[^0-9a-zA-Z]+', '_', self.product_name)
+        product = re.sub('[^0-9a-zA-Z]+', '_', keyw)
         self.filename = "../data/" + self.type + product[:15] + vendor + str(random.randint(1, 100000)) + ".png"
         self.filename = os.path.abspath(self.filename)
         self.htmlfn   = self.filename.replace("png", "html")
 
     def convert_url_to_pdf(self):
         self.get_random_filename()
-        try:
-            if "http" not in self.product_url:
+        main_window = browser.current_window_handle
+        #browser.execute_script("window.open();")
+        #browser.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.TAB)
+        #logger.debug("Open Window" + str(len(browser.window_handles)))
+        #browser.switch_to_window(browser.window_handles[1])
+        browser2 = webdriver.Chrome(chrome_options=options)
+        browser2.implicitly_wait(99)
+        browser2.set_page_load_timeout(99)
+        browser2.delete_all_cookies()
+        if "http" not in self.product_url:
                 www = re.compile("(w{3,})")
                 slash = re.compile("^/")
+                logger.debug("URL OF PRODUCT: " + self.product_url+ "\n First char: " + self.product_url[0]) 
                 if(www.match(self.product_url)):
                     self.product_url = "http://" + self.product_url
-                elif(slash.match(self.product_url)):
+                elif(self.product_url[0]=="/"):
                     self.product_url = "https://www.google.com" + self.product_url
                 else:
                     logger.debug("Can't find http in URL : please check.\nURL %s\n", self.product_url)
                     self.filename = "NA"
+                    browser.close()
                     return
-            make_screenshot(self.product_url, self.filename)
+        try:
+                browser2.get(self.product_url)
+        except Exception as e:
+                logger.debug("Error when getting webpage: " + self.product_url + " | " + str(e))
+                print("Error when getting webpage: " + self.product_url + " | " + str(e))
+                browser2.quit()
+                return
+
+        try:
+            browser2.get_screenshot_as_file(self.filename)
             self.processPDF = True
         except Exception as e:
             logger.exception("message")
@@ -163,22 +193,29 @@ class organic:
 
         # Save html as well.
         try:
-            #uag = UserAgent(cache=False)
+            #uag = UserAgent()
             #ua = uag.random
             #logger.debug("Agent:" + ua)
-            ua = random.choice(user_agent_list)
-            print("Agent:" + ua)
-            request = urllib.request.Request(self.product_url, None, {'User-Agent': ua})
-            urlfile = urllib.request.urlopen(request, timeout=10)
-            htmlcon = urlfile.read()
+            #ua = random.choice(user_agent_list)
+            #print("Agent:" + ua)
+            #request = urllib.request.Request(self.product_url, None, {'User-Agent': ua})
+            #urlfile = urllib.request.urlopen(request, timeout=10)
+            #htmlcon = browser.page_source
             with open(self.htmlfn, "w") as text_file:
-                print(f"{htmlcon}", file=text_file)
+                if self.product_url[-4:].lower() == ".xml":
+                        source=browser2.execute_script('return document.getElementById("webkit-xml-viewer-source-xml").innerHTML')
+                else:
+                        source=browser2.page_source
+                print(f"{source}", file=text_file)
             self.processHTML = True
         except Exception as e:
             logger.exception("message")
             logger.debug(str(e))
             self.htmlfn = "NA"
             self.processHTML = False
+        browser2.quit()
+        logger.debug("Close Window: " + str(len(browser.window_handles)))
+        #browser.switch_to_window(browser.window_handles[0])
 
 
 # Advertisement class
@@ -190,7 +227,8 @@ class advertiz(organic):
 
 class SearchResult:
     def __init__(self, keyword, id1, screenshot = True):
-        self.keyword    = urllib.parse.quote_plus(keyword)
+        #self.keyword    = urllib.parse.quote_plus(keyword)
+        self.keyword    = keyword
         self.name = keyword
         self.id = id1
         self.screenshot = screenshot
@@ -205,25 +243,40 @@ class SearchResult:
 
     def create_request(self, pagenum, num = 10, start = 0):
         self.address = "http://www.google.com/search?q=%s&num=%d&hl=en&start=%d" % (self.keyword, num, start)
-        self.request = urllib.request.Request(self.address, None, {'User-Agent': self.user})
+        #self.request = urllib.request.Request(self.address, None, {'User-Agent': self.user})
+        td = pagenum + 1
+        if pagenum==1:
+                browser.get("https://www.google.com")
+                input_element = browser.find_element_by_name("q")
+                input_element.send_keys(self.keyword)
+                input_element.submit()
+        else:
+                try:
+                        browser.find_element_by_xpath("//*[@id=\"nav\"]/tbody/tr/td["+str(td)+"]/a").click()
+                except Exception as e:
+                        logger.debug("There seems to be no page number: " + str(pagenum) + " in the results ")
+                        return False
         self.pagenum = pagenum
+        return True            
 
     def process_request(self):
-        #uag = UserAgent(cache=False)
-        ua = random.choice(user_agent_list)
-        print("Agent: " + ua)
-        logger.debug("Agent: " + ua)
+        uag = UserAgent()
+        ua = uag.random
+        #print("Agent: " + ua)
+        #logger.debug("Agent: " + ua)
         return ua
 
     def get_google_search_result(self):
-        self.urlfile = urllib.request.urlopen(self.request)
-        self.page    = self.urlfile.read().decode('utf-8')
+        #self.urlfile = urllib.request.urlopen(self.request)
+        self.page    = browser.page_source
+        if len(self.page)<10000:
+                raise Exception('it seems that google blocked us' + self.page)
         self.save_html(self.page, prefix="GoogleSearch")
         self.soup    = BeautifulSoup(self.page, 'html.parser')
         self.get_location()
     def get_location(self):
         try:
-          url          = 'http://freegeoip.net/json'
+          url          = 'http://api.ipstack.com/check?access_key=1c471b34e87e01d19c1d2b781bdfc408&output=json'
           r            = requests.get(url)
           j            = json.loads(r.text)
           logger.info("Trying to get location : {} ".format(j))
@@ -248,6 +301,8 @@ class SearchResult:
             print("State   : %s" % self.state)
         if self.ads:
             print("Total search results: {}".format(len(self.ads)))
+            if len(self.ads) == 0:
+                raise Exception('Something went wrong, there were no results, maybe google blocked us?')
 
     def parse_ads(self):
         # # get right ads
@@ -286,8 +341,9 @@ class SearchResult:
             self.processedSponsoredTop = True
         except Exception as e:
             logger.info("Unable to parse top sponsored Links")
-            if(self.top_sponsored is not None):
-                logger.debug(self.top_sponsored)
+            if(hasattr(self,'top_sponsored')):
+                if(self.top_sponsored is not None):
+                    logger.debug(self.top_sponsored)
             logger.debug(e)
             self.processedSponsoredTop = False
     def parse_right_ads_table(self):
@@ -393,6 +449,10 @@ class SearchResult:
     def parse_right_tile(self):
         try:
             self.right_tile = self.soup.find("div", {"class": "rhs_block"})
+            logger.debug("Found: " + str(type(self.right_tile)))
+            print("Found: " + str(type(self.right_tile)))            
+            if (self.right_tile is None):
+                self.right_tile = self.soup.find("div", {"class": "Yi78Pd"})
             self.right_tile_list = self.right_tile.find_all(class_="mnr-c pla-unit")
         except Exception as e:
             logger.info("Unable to parse right_tile\n")
@@ -510,7 +570,9 @@ class SearchResult:
       return row
 
     def save_html(self, data, prefix = "p"):
-        filename = "../data/" + prefix + "_" + self.keyword + "_" + str(self.pagenum) + ".html"
+        
+        keyw = self.keyword.replace("/","%2F")
+        filename = "../data/" + prefix + "_" + keyw[:100] + "_" + str(self.pagenum) + ".html"
         filename = os.path.abspath(filename)
         try:
             with open(filename, "w") as text_file:
@@ -531,8 +593,13 @@ def main():
     # parser.add_argument("-h", "--html", action="store", default=2, dest="html", help="Number of pages to parse")
     args = parser.parse_args()
 
+    
+
+
     report = []
     
+    global browser
+    global options
     
     if(args.product_name is not None and args.product_name.strip() != ""):
         logger.info("Got Product Via command line")
@@ -548,6 +615,26 @@ def main():
         attempts = 0
         success = 0
         while success != 1 and attempts < MAX_VPN_ATTEMPTS:
+            uag = UserAgent()
+            ua = uag['google chrome']
+            options = Options()
+            #options.add_argument("--headless")
+            options.add_argument("--no-sandbox")
+            #options.add_argument("--window-size=1920,1080")
+            #options.add_argument("--user-agent=\""+ua+"\"")
+            logger.debug("User Agent: "+ua)
+            try:
+                browser.quit()
+                browser = webdriver.Chrome(chrome_options=options)
+                browser.implicitly_wait(99)
+                browser.set_page_load_timeout(99)
+                browser.delete_all_cookies()
+            except Exception as e:
+                browser.quit()
+                browser = webdriver.Chrome(chrome_options=options)
+                browser.implicitly_wait(99)
+                browser.set_page_load_timeout(99)
+                browser.delete_all_cookies()
             attempts += 1
             logger.debug("Attempt {}".format(attempts))
             try:
@@ -574,7 +661,8 @@ def main():
                     logger.info("Parsing for {} failed, please rerun".format(product['ProductName']))
                     report.append("Parsing/VPN Issue, please rerun for Product : {}".format(product['ProductName']))
                 sleep(random.randint(5,15))
-
+    
+    browser.quit()
     save_results_to_spreadsheet()
     print("***************************** REPORT ************************************")
     print("\n".join(report))
@@ -588,10 +676,10 @@ def process_product(searchresult, pages):
     for i in range(pages):
         logger.info("Parsing Page : {}".format(i + 1))
         page_start = i * 10
-        searchresult.create_request(pagenum = i + 1, start = page_start)
-        searchresult.get_google_search_result()
-        searchresult.parse_ads()
-        logger.debug(searchresult.to_string())
+        if searchresult.create_request(pagenum = i + 1, start = page_start):
+            searchresult.get_google_search_result()
+            searchresult.parse_ads()
+            logger.debug(searchresult.to_string())
     searchresult.convert_to_csv()
 
 def get_product_list():
