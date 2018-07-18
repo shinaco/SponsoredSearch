@@ -148,25 +148,25 @@
 		}
 		$result=$query->execute()->finalize();
 	}
-    $query = 'SELECT * FROM searchresults as sr where not exists
-	(select 1 from searchresultsfinal as srf where ifnull(sr.City,\'!@#$%^&*\') = ifnull(srf.City,\'!@#$%^&*\') and
-                                                ifnull(sr.State,\'!@#$%^&*\') = ifnull(srf.State,,\'!@#$%^&*\') and
-                                                ifnull(sr.Datetime,\'!@#$%^&*\') = ifnull(srf.Datetime,\'!@#$%^&*\') and
-                                                ifnull(sr.SearchTerm,\'!@#$%^&*\') = ifnull(srf.SearchTerm,\'!@#$%^&*\') and
-                                                ifnull(sr.GoogleURL,\'!@#$%^&*\') = ifnull(srf.GoogleURL,\'!@#$%^&*\') and
-                                                ifnull(sr.AdURLWebsite,\'!@#$%^&*\') = ifnull(srf.AdURLWebsite,\'!@#$%^&*\') and
-                                                ifnull(sr.WebsiteName,\'!@#$%^&*\') = ifnull(srf.WebsiteName,\'!@#$%^&*\') and
-                                                ifnull(sr.Vendor,\'!@#$%^&*\') = ifnull(srf.Vendor,\'!@#$%^&*\') and
-                                                ifnull(sr.PositionNum,\'!@#$%^&*\') = ifnull(srf.PositionNum,\'!@#$%^&*\') and
-                                                ifnull(sr.Position,\'!@#$%^&*\') = ifnull(srf.Position,\'!@#$%^&*\') and
-                                                ifnull(sr.ResultConsistent,\'!@#$%^&*\') = ifnull(srf.ResultConsistent,\'!@#$%^&*\') and
-                                                ifnull(sr.PageNumber,\'!@#$%^&*\') = ifnull(srf.PageNumber,\'!@#$%^&*\') and
-                                                ifnull(sr.TypeofResult,\'!@#$%^&*\') = ifnull(srf.TypeofResult,\'!@#$%^&*\') and
-                                                ifnull(sr.Comments,\'!@#$%^&*\') = ifnull(srf.Comments,\'!@#$%^&*\') and
-                                                ifnull(sr.AdValue,\'!@#$%^&*\') = ifnull(srf.AdValue,\'!@#$%^&*\') and
-                                                ifnull(sr.StaticFilePath,\'!@#$%^&*\') = ifnull(srf.StaticFilePath,\'!@#$%^&*\') and 
-ifnull(sr.productName,\'!@#$%^&*\') = ifnull(srf.productName,\'!@#$%^&*\') and
-ifnull(sr.productID,\'!@#$%^&*\') = ifnull(srf.productID,\'!@#$%^&*\'))';
+    $query = "SELECT * FROM searchresults as sr where not exists
+	(select 1 from searchresultsfinal as srf where ifnull(sr.City,'00ZZZSXADEWQE123') = ifnull(srf.City,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.State,'00ZZZSXADEWQE123') = ifnull(srf.State,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.Datetime,'00ZZZSXADEWQE123') = ifnull(srf.Datetime,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.SearchTerm,'00ZZZSXADEWQE123') = ifnull(srf.SearchTerm,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.GoogleURL,'00ZZZSXADEWQE123') = ifnull(srf.GoogleURL,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.AdURLWebsite,'00ZZZSXADEWQE123') = ifnull(srf.AdURLWebsite,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.WebsiteName,'00ZZZSXADEWQE123') = ifnull(srf.WebsiteName,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.Vendor,'00ZZZSXADEWQE123') = ifnull(srf.Vendor,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.PositionNum,'00ZZZSXADEWQE123') = ifnull(srf.PositionNum,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.Position,'00ZZZSXADEWQE123') = ifnull(srf.Position,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.ResultConsistent,'00ZZZSXADEWQE123') = ifnull(srf.ResultConsistent,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.PageNumber,'00ZZZSXADEWQE123') = ifnull(srf.PageNumber,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.TypeofResult,'00ZZZSXADEWQE123') = ifnull(srf.TypeofResult,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.Comments,'00ZZZSXADEWQE123') = ifnull(srf.Comments,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.AdValue,'00ZZZSXADEWQE123') = ifnull(srf.AdValue,'00ZZZSXADEWQE123') and
+                                                ifnull(sr.StaticFilePath,'00ZZZSXADEWQE123') = ifnull(srf.StaticFilePath,'00ZZZSXADEWQE123') and 
+ifnull(sr.productName,'00ZZZSXADEWQE123') = ifnull(srf.productName,'00ZZZSXADEWQE123') and
+ifnull(sr.productID,'00ZZZSXADEWQE123') = ifnull(srf.productID,'00ZZZSXADEWQE123'))";
     if($fileX=fopen("exclude.csv","r"))
     {
         $query = $query . " and sr.productName not in ( ";
@@ -187,7 +187,7 @@ ifnull(sr.productID,\'!@#$%^&*\') = ifnull(srf.productID,\'!@#$%^&*\'))';
         $query = $query . ")";
         fclose($fileX);
     }
-	$results = $db->query($query);
+    $results = $db->query($query);
 	
 	if($row = $results->fetchArray())
 	{
