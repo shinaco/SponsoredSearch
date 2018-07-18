@@ -214,7 +214,7 @@ ifnull(sr.productID,'00ZZZSXADEWQE123') = ifnull(srf.productID,'00ZZZSXADEWQE123
 <table border=1>
 	<tr>
 		<td colspan="2">Search Term: <?php echo $row['productName']; ?> | <a href="images/GoogleSearch_<?php echo str_replace("%","%25",$row['SearchTerm']);?>_1.html">Page 1</a> | <a href="images/GoogleSearch_<?php echo str_replace("%","%25",$row['SearchTerm']);?>_2.html">Page 2</a>
-            <br>City: <?php echo $row['City']; ?>, State: <?php echo $row['State']; ?>, Position: <?php echo $row['Position']; ?>, Page Number: <?php echo $row['PageNumber']; ?></td>
+            <br>City: <?php echo $row['City']; ?>, State: <?php echo $row['State']; ?>, Position: <?php echo $row['Position']; ?>, Page Number: <?php echo $row['PageNumber']; ?>, Price in search result: <?php echo $row['AdValue']; ?></td>
 	</tr>
 	<tr>
 		<td width="25%"><img class="zoom" width="100%" src="<?php echo $img; ?>"></td><td><a href=<?php echo $row["AdURLWebsite"] ?> target="_blank"><img class="zoom" width=100% src="<?php echo str_replace("file:///home/research/ResearchProject/GoogleSearch/data/","/images/",$row['StaticFilePath']); ?>" alt="test"></a></td>
