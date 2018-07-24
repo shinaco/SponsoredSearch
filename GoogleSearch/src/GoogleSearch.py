@@ -28,6 +28,7 @@ options = Options()
 options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--window-size=1920,1080")
+options.add_argument("--start-maximized")
 browser = webdriver.Chrome(chrome_options=options)
 browser.implicitly_wait(99)
 browser.set_page_load_timeout(99)
@@ -167,6 +168,8 @@ class organic:
                 logger.debug("URL OF PRODUCT: " + self.product_url+ "\n First char: " + self.product_url[0]) 
                 if(www.match(self.product_url)):
                     self.product_url = "http://" + self.product_url
+                elif(self.product_url[:2]=="//"):
+                    self.product_url = "https:" + self.product_url
                 elif(self.product_url[0]=="/"):
                     self.product_url = "https://www.google.com" + self.product_url
                 else:
@@ -207,6 +210,9 @@ class organic:
                 else:
                         source=browser2.page_source
                 print(f"{source}", file=text_file)
+                #if ("gstatic" in source and "recaptcha" in source.lower()) or len(source) < 10000:
+                        #wait=input("Possible captcha or error page, press enter when finished")
+                        #source=browser2.page_source
             self.processHTML = True
         except Exception as e:
             logger.exception("message")
@@ -438,7 +444,8 @@ class SearchResult:
                      ad             = advertiz(ad_data.text, self.pagenum)
                 ad.location    = "top"
                 ad.product_url = ad_data['href']
-                ad.price       = item(text=re.compile(r"(\$\d+[\.\d]+)\b"))[0]
+                #logger.debug('ITEM: ' + str(item) + "\n" + str(item(text=re.compile(r"(\$\d+(?:,\d{3})*[\.\d]+)\b"))))
+                ad.price       = item(text=re.compile(r"(\$\d+(?:,\d{3})*[\.\d]+)\b"))[0]
                 ad.vendor      = item.find(class_="LbUacb").span.get_text()
                 ad.convert_url_to_pdf()
                 logger.debug(ad.to_string())
@@ -469,7 +476,7 @@ class SearchResult:
                 ad             = advertiz(ad_data.span.text, self.pagenum)
                 ad.location    = "right tile"
                 ad.product_url = ad_data['href']
-                ad.price       = item(text=re.compile(r"(\$\d+[\.\d]+)\b"))[0]
+                ad.price       = item(text=re.compile(r"(\$\d+(?:,\d{3})*[\.\d]+)\b"))[0]
                 ad.vendor      = item.find(class_="LbUacb").span.get_text()
                 ad.convert_url_to_pdf()
                 logger.debug(ad.to_string())
@@ -505,7 +512,10 @@ class SearchResult:
             count = 1
             for item in self.organic_list:
                 try:
-                    item_data           = item.find('h3', {"class":"r"}).find('a')
+                    try:
+                        item_data           = item.find('h3', {"class":"r"}).find('a')
+                    except Exception as e:
+                        item_data           = item.find('div', {"class":"r"}).find('a')
                     item_name           = item_data.text
                     oresult             = organic(item_name, self.pagenum)
                     oresult.product_url = item_data['href']
@@ -522,6 +532,7 @@ class SearchResult:
                     self.ads.append(oresult)
                 except Exception as e:
                     logger.info("Can't process organic item at {}, probably a list of images here.".format(count))
+                    logger.debug(str(e))
                     continue
                 self.processOrganic = True
         except Exception as e:
@@ -550,7 +561,7 @@ class SearchResult:
         return vendor.group(1)
 
     def get_price_from_organic(self, item):
-        price_ex = re.compile(r"(\$\d+[\.\d]+)\b")
+        price_ex = re.compile(r"(\$\d+(?:,\d{3})*[\.\d]+)\b")
         try:
             text_to_search = item.find('div', {"class":"slp f"}).text
             print(text_to_search)
@@ -622,6 +633,7 @@ def main():
             options.add_argument("--no-sandbox")
             #options.add_argument("--window-size=1920,1080")
             #options.add_argument("--user-agent=\""+ua+"\"")
+            options.add_argument("--start-maximized");
             logger.debug("User Agent: "+ua)
             try:
                 browser.quit()
